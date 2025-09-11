@@ -19,10 +19,10 @@ function SignupPage() {
                 <Form.Group className="mb-3" controlId="usernameForm">
                   <Form.Control type="text" placeholder="ユーザー名" />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="passwordForm">
+                <Form.Group className="mb-3" controlId="password1Form">
                   <Form.Control type="password" placeholder="パスワード" />
                 </Form.Group>
-                <Form.Group className="mb-3" controlId="passwordForm">
+                <Form.Group className="mb-3" controlId="password2Form">
                   <Form.Control
                     type="password"
                     placeholder="パスワード（確認）"
