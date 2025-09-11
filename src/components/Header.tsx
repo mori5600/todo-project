@@ -3,7 +3,7 @@ import Nav from "react-bootstrap/Nav";
 import Navbar from "react-bootstrap/Navbar";
 import { AppURL } from "../constants";
 
-const Header = () => {
+function Header() {
   return (
     <Navbar collapseOnSelect expand="lg" className="bg-body-tertiary">
       <Container>
@@ -22,6 +22,6 @@ const Header = () => {
       </Container>
     </Navbar>
   );
-};
+}
 
 export default Header;
