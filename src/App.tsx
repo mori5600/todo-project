@@ -1,7 +1,8 @@
-// import Container from "react-bootstrap/Container";
 import Header from "./components/Header";
-import LoginPage from "./pages/LoginPage";
-import { Routes, Route, Link } from "react-router-dom";
+import LoginPage from "./pages/auth/LoginPage";
+import { Routes, Route } from "react-router-dom";
+import SignupPage from "./pages/auth/SignupPage";
+import { AppURL } from "./constants";
 
 function App() {
   return (
@@ -9,8 +10,9 @@ function App() {
       <Header />
       <main>
         <Routes>
-          <Route path="/" element={<LoginPage />} />
-          <Route path="/auth/login/" element={<LoginPage />} />
+          <Route path={AppURL.ROOT} element={<LoginPage />} />
+          <Route path={AppURL.LOGIN} element={<LoginPage />} />
+          <Route path={AppURL.SIGNUP} element={<SignupPage />} />
         </Routes>
       </main>
     </>
