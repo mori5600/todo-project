@@ -1,22 +1,17 @@
-import { useState } from "react";
-import Container from "react-bootstrap/Container";
-import { Button } from "react-bootstrap";
+// import Container from "react-bootstrap/Container";
 import Header from "./components/Header";
+import LoginPage from "./pages/LoginPage";
+import { Routes, Route, Link } from "react-router-dom";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
       <Header />
       <main>
-        <Container>
-          <div className="card">
-            <Button onClick={() => setCount((count) => count + 1)}>
-              count is {count}
-            </Button>
-          </div>
-        </Container>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/auth/login/" element={<LoginPage />} />
+        </Routes>
       </main>
     </>
   );

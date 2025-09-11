@@ -6,12 +6,14 @@ const Header = () => {
   return (
     <Navbar collapseOnSelect expand="lg" className="bg-body-tertiary">
       <Container>
-        <Navbar.Brand href="#home">TODO-PROJECT</Navbar.Brand>
+        <Navbar.Brand className="fw-bold" href="/">
+          TODO-PROJECT
+        </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
         <Navbar.Collapse id="responsive-navbar-nav">
           <Nav className="ms-auto">
-            <Nav.Link href="#auth/login/">ログイン</Nav.Link>
-            <Nav.Link eventKey={2} href="#auth/signup/">
+            <Nav.Link href="/auth/login/">ログイン</Nav.Link>
+            <Nav.Link eventKey={2} href="/auth/signup/">
               サインアップ
             </Nav.Link>
           </Nav>
