@@ -1,5 +1,5 @@
 export const AppURL = {
-  ROOT: "/",
+  HOME: "/",
   LOGIN: "/auth/login",
   SIGNUP: "/auth/signup",
 } as const;

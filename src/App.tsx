@@ -10,7 +10,7 @@ function App() {
       <Header />
       <main>
         <Routes>
-          <Route path={AppURL.ROOT} element={<LoginPage />} />
+          <Route path={AppURL.HOME} element={<LoginPage />} />
           <Route path={AppURL.LOGIN} element={<LoginPage />} />
           <Route path={AppURL.SIGNUP} element={<SignupPage />} />
         </Routes>
