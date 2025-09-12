@@ -23,7 +23,7 @@ function LoginPage() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const redirectTo = AppURL.HOME;
+  const redirectTo = AppURL.TODOLIST;
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
