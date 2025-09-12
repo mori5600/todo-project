@@ -7,12 +7,7 @@ import Button from "react-bootstrap/Button";
 import { Link, useNavigate } from "react-router-dom";
 import { AppURL } from "../../constants";
 import { useState, type FormEvent } from "react";
-
-type LoginRequest = {
-  username: string;
-  password: string;
-  rememberMe: boolean;
-};
+import type { LoginRequest } from "../../features/auth/types";
 
 // モック認証（1秒待って "admin"/"admin" なら成功）
 const mockLogin = (u: string, p: string) =>
