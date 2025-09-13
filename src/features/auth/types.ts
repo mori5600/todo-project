@@ -3,3 +3,5 @@ export type LoginRequest = {
   password: string;
   rememberMe: boolean;
 };
+
+export type TokenPair = { access: string; refresh: string };

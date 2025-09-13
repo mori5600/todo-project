@@ -7,52 +7,47 @@ import Button from "react-bootstrap/Button";
 import { Link, useNavigate } from "react-router-dom";
 import { AppURL } from "../../constants";
 import { useState, type FormEvent } from "react";
-import type { LoginRequest } from "../../features/auth/types";
-
-// モック認証（1秒待って "admin"/"admin" なら成功）
-const mockLogin = (u: string, p: string) =>
-  new Promise<boolean>((resolve) =>
-    setTimeout(() => resolve(u === "admin" && p === "admin"), 1000)
-  );
+import { useLogin } from "../../features/auth/useLogin";
 
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const redirectTo = AppURL.TODOLIST;
+
+  const login = useLogin(); // useMutation を返す（mutate / mutateAsync / isPending / error など）
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (login.isPending) return;
     setError(null);
-    setLoading(true);
 
     try {
-      const loginRequest: LoginRequest = {
+      // DRF(SimpleJWT) へログイン
+      const { access, refresh } = await login.mutateAsync({
         username,
         password,
-        rememberMe,
-      };
+      });
 
-      const ok = await mockLogin(loginRequest.username, loginRequest.password);
-      if (!ok) {
-        setError("ユーザー名またはパスワードが正しくありません。");
-        return;
-      }
-
-      // 疑似トークン保存（rememberMe で保持先を切替）
+      // トークン保存（rememberMe で localStorage / sessionStorage を切替）
       const storage = rememberMe ? localStorage : sessionStorage;
-      storage.setItem("authToken", "mock-token");
-      storage.setItem("username", loginRequest.username);
+      // 片方に残らないようにクリア
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      sessionStorage.removeItem("accessToken");
+      sessionStorage.removeItem("refreshToken");
+
+      storage.setItem("accessToken", access);
+      storage.setItem("refreshToken", refresh);
+      storage.setItem("username", username);
 
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setLoading(false);
+      // useLogin 内で投げられたエラーを表示
+      setError((err as Error).message || "認証に失敗しました。");
     }
   };
 
@@ -98,9 +93,9 @@ function LoginPage() {
                   />
                 </Form.Group>
 
-                {error && (
+                {(error || (login.error as unknown as Error)) && (
                   <div className="text-danger mb-3" role="alert">
-                    {error}
+                    {error ?? (login.error as unknown as Error)?.message}
                   </div>
                 )}
 
@@ -108,9 +103,9 @@ function LoginPage() {
                   variant="primary"
                   type="submit"
                   className="w-100"
-                  disabled={!canSubmit || loading}
+                  disabled={!canSubmit || login.isPending}
                 >
-                  {loading ? "ログイン中..." : "ログイン"}
+                  {login.isPending ? "ログイン中..." : "ログイン"}
                 </Button>
               </Form>
 
