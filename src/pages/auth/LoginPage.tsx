@@ -23,6 +23,16 @@ function LoginPage() {
   const redirectTo = AppURL.TODOLIST;
   const login = useLogin(); // useMutation を返す（mutate / mutateAsync / isPending / error など）
 
+  const getErrorMessage = (e: unknown) => {
+    // Axios の場合やサーバーの message を拾う
+    if (!e) return ErrorMessage.FAILED_TO_LOGIN;
+    const anyErr = e as any;
+    if (typeof anyErr === "string") return anyErr;
+    if (anyErr?.message) return anyErr.message;
+    if (anyErr?.response?.data?.message) return anyErr.response.data.message;
+    return ErrorMessage.FAILED_TO_LOGIN;
+  };
+
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (login.isPending) return;
@@ -39,7 +49,7 @@ function LoginPage() {
 
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      setError((err as Error).message || ErrorMessage.FAILED_TO_LOGIN);
+      setError(getErrorMessage(err));
     }
   };
 
@@ -55,22 +65,36 @@ function LoginPage() {
 
               <Form onSubmit={handleSubmit} noValidate>
                 <Form.Group className="mb-3" controlId="usernameForm">
+                  <Form.Label className="visually-hidden">
+                    ユーザー名
+                  </Form.Label>
                   <Form.Control
                     type="text"
                     placeholder="ユーザー名"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      setError(null);
+                      login.reset?.();
+                    }}
                     required
                     autoComplete="username"
                   />
                 </Form.Group>
 
                 <Form.Group className="mb-3" controlId="passwordForm">
+                  <Form.Label className="visually-hidden">
+                    パスワード
+                  </Form.Label>
                   <Form.Control
                     type="password"
                     placeholder="パスワード"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setError(null);
+                      login.reset?.();
+                    }}
                     required
                     autoComplete="current-password"
                   />
@@ -81,13 +105,16 @@ function LoginPage() {
                     type="checkbox"
                     label="ログインしたままにする"
                     checked={rememberMe}
-                    onChange={() => setRememberMe((v) => !v)}
+                    onChange={() => {
+                      setRememberMe((v) => !v);
+                      setError(null);
+                    }}
                   />
                 </Form.Group>
 
                 {(error || (login.error as unknown as Error)) && (
                   <div className="text-danger mb-3" role="alert">
-                    {error ?? (login.error as unknown as Error)?.message}
+                    {error ?? getErrorMessage(login.error)}
                   </div>
                 )}
 
