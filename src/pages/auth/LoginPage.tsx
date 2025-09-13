@@ -8,16 +8,19 @@ import { Link, useNavigate } from "react-router-dom";
 import { AppURL } from "../../constants";
 import { useState, type FormEvent } from "react";
 import { useLogin } from "../../features/auth/useLogin";
+import { tokenStore } from "../../features/auth/tokenStore";
+
+const ErrorMessage = {
+  FAILED_TO_LOGIN: "認証に失敗しました。",
+};
 
 function LoginPage() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const navigate = useNavigate();
   const redirectTo = AppURL.TODOLIST;
-
   const login = useLogin(); // useMutation を返す（mutate / mutateAsync / isPending / error など）
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -26,28 +29,17 @@ function LoginPage() {
     setError(null);
 
     try {
-      // DRF(SimpleJWT) へログイン
       const { access, refresh } = await login.mutateAsync({
         username,
         password,
       });
 
-      // トークン保存（rememberMe で localStorage / sessionStorage を切替）
-      const storage = rememberMe ? localStorage : sessionStorage;
-      // 片方に残らないようにクリア
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      sessionStorage.removeItem("accessToken");
-      sessionStorage.removeItem("refreshToken");
-
-      storage.setItem("accessToken", access);
-      storage.setItem("refreshToken", refresh);
-      storage.setItem("username", username);
+      tokenStore.clear();
+      tokenStore.save(access, refresh, rememberMe);
 
       navigate(redirectTo, { replace: true });
     } catch (err) {
-      // useLogin 内で投げられたエラーを表示
-      setError((err as Error).message || "認証に失敗しました。");
+      setError((err as Error).message || ErrorMessage.FAILED_TO_LOGIN);
     }
   };
 
