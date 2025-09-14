@@ -4,7 +4,9 @@ import type { Me } from "./types";
 
 async function authFetch(url: string, init?: RequestInit) {
   const tokens = tokenStore.load();
-  if (!tokens?.access) throw new Error("認証が必要です。");
+  if (!tokens?.access) {
+    throw new Error("認証が必要です。");
+  }
   const res = await fetch(url, {
     ...init,
     headers: {
@@ -19,15 +21,12 @@ async function authFetch(url: string, init?: RequestInit) {
       const data = await res.json();
       if (typeof data === "object" && data) {
         msg =
-          // {"field":["msg"]...} を結合
           (data as any).message ||
           (data as any).detail ||
           Object.values(data).flat().map(String).join(" ") ||
           msg;
       }
-    } catch {
-      /* ignore */
-    }
+    } catch {}
     throw new Error(msg);
   }
   return res;
