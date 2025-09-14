@@ -37,12 +37,10 @@ export function useCreateTodo() {
 export function useUpdateTodo() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id: number; input: UpdateTodoInput }) =>
-      updateTodo(vars.id, vars.input),
-    onSuccess: (updated) => {
-      qc.setQueryData<Todo[]>(KEY, (prev) =>
-        prev ? prev.map((t) => (t.id === updated.id ? updated : t)) : [updated]
-      );
+    mutationFn: (v: { id: number; input: UpdateTodoInput }) =>
+      updateTodo(v.id, v.input),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 }
@@ -51,10 +49,8 @@ export function useDeleteTodo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteTodo(id),
-    onSuccess: (_data, id) => {
-      qc.setQueryData<Todo[]>(KEY, (prev) =>
-        prev ? prev.filter((t) => t.id !== id) : []
-      );
+    onSuccess: (_d, id, ctx) => {
+      qc.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 }

@@ -1,6 +1,6 @@
 import { API_BASE_URL, HttpMethod } from "../../constants";
 import { tokenStore } from "../auth/tokenStore";
-import type { CreateTodoInput, Todo, Paginated, UpdateTodoInput } from "./types";
+import type { CreateTodoInput, UpdateTodoInput } from "./types";
 
 function buildQuery(params: Record<string, any>) {
   const q = new URLSearchParams();
@@ -115,18 +115,54 @@ export async function updateTodo(
   id: number,
   input: UpdateTodoInput
 ): Promise<Todo> {
-  const res = await authFetch(`${API_BASE_URL}/todos/${id}/`, {
+  const tokens = tokenStore.load();
+  if (!tokens?.access) throw new Error("認証が必要です。");
+  const res = await fetch(`${API_BASE_URL}/todos/${id}/`, {
     method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${tokens.access}`,
+    },
     body: JSON.stringify(input),
   });
+  if (!res.ok) {
+    let msg = "更新に失敗しました。";
+    try {
+      const data = await res.json();
+      msg =
+        data?.message ||
+        data?.detail ||
+        (typeof data === "object"
+          ? Object.values(data).flat().map(String).join(" ")
+          : msg);
+    } catch {}
+    throw new Error(msg);
+  }
   return res.json();
 }
 
-// 削除
 export async function deleteTodo(id: number): Promise<void> {
-  await authFetch(`${API_BASE_URL}/todos/${id}/`, {
-    method: HttpMethod.DELETE,
+  const tokens = tokenStore.load();
+  if (!tokens?.access) throw new Error("認証が必要です。");
+  const res = await fetch(`${API_BASE_URL}/todos/${id}/`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${tokens.access}`,
+    },
   });
+  if (!res.ok) {
+    let msg = "削除に失敗しました。";
+    try {
+      const data = await res.json();
+      msg =
+        data?.message ||
+        data?.detail ||
+        (typeof data === "object"
+          ? Object.values(data).flat().map(String).join(" ")
+          : msg);
+    } catch {}
+    throw new Error(msg);
+  }
 }
 
 // 1ページ取得

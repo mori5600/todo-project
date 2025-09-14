@@ -15,8 +15,10 @@ export type CreateTodoInput = {
   status?: Status;
 };
 
-export type UpdateTodoInput = Partial<Omit<CreateTodoInput, "title">> & {
+export type UpdateTodoInput = {
   title?: string;
+  description?: string;
+  status?: Status;
 };
 
 export type Paginated<T> = {

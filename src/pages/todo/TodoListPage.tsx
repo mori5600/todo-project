@@ -8,7 +8,12 @@ import {
   Pagination,
   Form,
 } from "react-bootstrap";
-import { useTodosPage, useCreateTodo } from "../../features/todo/hooks";
+import {
+  useTodosPage,
+  useCreateTodo,
+  useUpdateTodo,
+  useDeleteTodo,
+} from "../../features/todo/hooks";
 import TodoList from "../../features/todo/TodoList";
 import TodoDetail from "../../features/todo/TodoDetail";
 import TodoAddModal from "../../features/todo/TodoAddModal";
@@ -32,6 +37,8 @@ function TodoListPage() {
 
   const { data, isFetching, error } = useTodosPage({ page, pageSize, search });
   const createMut = useCreateTodo();
+  const updateMut = useUpdateTodo();
+  const deleteMut = useDeleteTodo();
 
   const todos = data?.results ?? [];
   const total = data?.count ?? 0;
@@ -129,8 +136,18 @@ function TodoListPage() {
             todo={selectedTodo}
             onEdit={() => setShowEditModal(true)}
             onDelete={() => {
-              // TODO: 削除実装
-              alert("削除は未実装");
+              if (!selectedTodo) return;
+              if (!confirm("削除しますか？")) return;
+              const willEmpty = todos.length === 1; // このページ最後
+              deleteMut.mutate(selectedTodo.id, {
+                onSuccess: () => {
+                  setSelectedId(null);
+                  // 最後の1件を削除し前ページがある場合は前ページへ
+                  if (willEmpty && page > 1) {
+                    setPage((p) => p - 1);
+                  }
+                },
+              });
             }}
           />
         </Col>
@@ -157,19 +174,33 @@ function TodoListPage() {
         onHide={() => setShowEditModal(false)}
         todo={selectedTodo}
         onSave={(values) => {
-          // TODO: 更新実装
-          console.log("update", values);
+          if (!selectedTodo) return;
+          updateMut.mutate(
+            {
+              id: selectedTodo.id,
+              input: {
+                title: values.title,
+                description: values.description,
+                status: values.status,
+              },
+            },
+            {
+              onSuccess: () => setShowEditModal(false),
+            }
+          );
         }}
       />
 
-      {createMut.isPending && (
+      {(createMut.isPending || updateMut.isPending || deleteMut.isPending) && (
         <div className="position-fixed bottom-0 end-0 m-3 small text-muted">
-          追加中...
+          処理中...
         </div>
       )}
-      {createMut.error && (
+      {(createMut.error || updateMut.error || deleteMut.error) && (
         <div className="position-fixed bottom-0 start-0 m-3 text-danger small">
-          {createMut.error.message}
+          {createMut.error?.message ||
+            updateMut.error?.message ||
+            deleteMut.error?.message}
         </div>
       )}
     </Container>

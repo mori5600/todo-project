@@ -5,9 +5,10 @@ type Props = {
   todo: Todo | null;
   onEdit: () => void;
   onDelete: () => void;
+  disabled?: boolean;
 };
 
-function TodoDetail({ todo, onEdit, onDelete }: Props) {
+function TodoDetail({ todo, onEdit, onDelete, disabled }: Props) {
   if (!todo) {
     return (
       <Card className="h-100" style={{ minHeight: "60vh" }}>
@@ -23,10 +24,18 @@ function TodoDetail({ todo, onEdit, onDelete }: Props) {
       <Card.Header className="d-flex justify-content-between align-items-center">
         <span className="fw-semibold">{todo.title}</span>
         <ButtonGroup size="sm">
-          <Button variant="outline-primary" onClick={onEdit}>
+          <Button
+            variant="outline-primary"
+            onClick={onEdit}
+            disabled={disabled}
+          >
             編集
           </Button>
-          <Button variant="outline-danger" onClick={onDelete}>
+          <Button
+            variant="outline-danger"
+            onClick={onDelete}
+            disabled={disabled}
+          >
             削除
           </Button>
         </ButtonGroup>
