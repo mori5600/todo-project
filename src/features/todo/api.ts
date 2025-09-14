@@ -1,6 +1,11 @@
 import { API_BASE_URL, HttpMethod } from "../../constants";
 import { tokenStore } from "../auth/tokenStore";
-import type { CreateTodoInput, UpdateTodoInput } from "./types";
+import type {
+  CreateTodoInput,
+  Paginated,
+  Todo,
+  UpdateTodoInput,
+} from "./types";
 
 function buildQuery(params: Record<string, any>) {
   const q = new URLSearchParams();

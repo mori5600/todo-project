@@ -49,7 +49,7 @@ export function useDeleteTodo() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id: number) => deleteTodo(id),
-    onSuccess: (_d, id, ctx) => {
+    onSuccess: (_d, _id) => {
       qc.invalidateQueries({ queryKey: ["todos"] });
     },
   });
