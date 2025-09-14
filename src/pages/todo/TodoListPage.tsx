@@ -14,11 +14,23 @@ import TodoDetail from "../../features/todo/TodoDetail";
 import TodoAddModal from "../../features/todo/TodoAddModal";
 import TodoEditModal from "../../features/todo/TodoEditModal";
 
+// 簡易デバウンスフック（ローカル実装）
+function useDebouncedValue<T>(value: T, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
+
 function TodoListPage() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(10);
-  const [search, setSearch] = useState("");
-  const { data, isLoading, error } = useTodosPage({ page, pageSize, search });
+  const [searchInput, setSearchInput] = useState("");
+  const search = useDebouncedValue(searchInput, 300); // API へ送る検索語を遅延
+
+  const { data, isFetching, error } = useTodosPage({ page, pageSize, search });
   const createMut = useCreateTodo();
 
   const todos = data?.results ?? [];
@@ -29,12 +41,14 @@ function TodoListPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
 
+  // 初期 / データ変化で選択
   useEffect(() => {
     if (!selectedId && todos.length > 0) {
       setSelectedId(todos[0].id);
     }
   }, [todos, selectedId]);
 
+  // ページや検索語変更で選択解除
   useEffect(() => {
     setSelectedId(null);
   }, [page, search]);
@@ -44,31 +58,22 @@ function TodoListPage() {
     [todos, selectedId]
   );
 
-  if (isLoading) {
-    return (
-      <Container className="mt-4 text-center">
-        <Spinner animation="border" />
-      </Container>
-    );
-  }
-  if (error) {
-    return (
-      <Container className="mt-4">
-        <Alert variant="danger">{error.message}</Alert>
-      </Container>
-    );
-  }
-
   return (
     <Container className="mt-4">
+      {error && (
+        <Alert variant="danger" className="mb-3">
+          {error.message}
+        </Alert>
+      )}
+
       <Row className="mb-3">
         <Col sm={6} className="mb-2">
           <Form.Control
             placeholder="検索..."
-            value={search}
+            value={searchInput}
             onChange={(e) => {
               setPage(1);
-              setSearch(e.target.value);
+              setSearchInput(e.target.value);
             }}
           />
         </Col>
@@ -76,9 +81,18 @@ function TodoListPage() {
           sm={6}
           className="d-flex align-items-center justify-content-sm-end small text-muted"
         >
+          {isFetching && (
+            <Spinner
+              size="sm"
+              animation="border"
+              className="me-2"
+              role="status"
+            />
+          )}
           {total} 件 / {totalPages} ページ
         </Col>
       </Row>
+
       <Row style={{ minHeight: "60vh" }}>
         <Col xs={12} sm={5} md={4} className="mb-3 mb-sm-0">
           <TodoList
@@ -109,17 +123,19 @@ function TodoListPage() {
             </Pagination>
           </div>
         </Col>
+
         <Col xs={12} sm={7} md={8}>
           <TodoDetail
             todo={selectedTodo}
             onEdit={() => setShowEditModal(true)}
             onDelete={() => {
-              // ページング対応の削除ロジックは後で (例: 削除後に再フェッチ)
-              alert("削除は未実装（ページング対応版）");
+              // TODO: 削除実装
+              alert("削除は未実装");
             }}
           />
         </Col>
       </Row>
+
       <TodoAddModal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
@@ -129,26 +145,33 @@ function TodoListPage() {
             {
               onSuccess: () => {
                 setShowAddModal(false);
-                setPage(1); // 先頭ページに戻す
+                setPage(1);
               },
             }
           );
         }}
       />
-      {/* エラー / 進行表示（任意） */}
-      {createMut.error && (
-        <div className="text-danger small mt-2">
-          追加エラー: {createMut.error.message}
-        </div>
-      )}
+
       <TodoEditModal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
         todo={selectedTodo}
         onSave={(values) => {
-          console.log("edit", values);
+          // TODO: 更新実装
+          console.log("update", values);
         }}
       />
+
+      {createMut.isPending && (
+        <div className="position-fixed bottom-0 end-0 m-3 small text-muted">
+          追加中...
+        </div>
+      )}
+      {createMut.error && (
+        <div className="position-fixed bottom-0 start-0 m-3 text-danger small">
+          {createMut.error.message}
+        </div>
+      )}
     </Container>
   );
 }

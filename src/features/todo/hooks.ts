@@ -3,6 +3,7 @@ import {
   useMutation,
   useQueryClient,
   useInfiniteQuery,
+  type UseQueryOptions,
 } from "@tanstack/react-query";
 import {
   getTodos,
@@ -11,11 +12,7 @@ import {
   deleteTodo,
   getTodosPage,
 } from "./api";
-import type {
-  Todo,
-  UpdateTodoInput,
-  Paginated,
-} from "./types";
+import type { Todo, UpdateTodoInput, Paginated } from "./types";
 
 const KEY = ["todos"];
 
@@ -62,13 +59,17 @@ export function useDeleteTodo() {
   });
 }
 
-// 通常ページネーション
 export function useTodosPage(params: {
   page: number;
   pageSize: number;
   search?: string;
 }) {
-  return useQuery<Paginated<Todo>, Error>({
+  return useQuery<
+    Paginated<Todo>,
+    Error,
+    Paginated<Todo>,
+    [string, { page: number; pageSize: number; search?: string }]
+  >({
     queryKey: ["todos", params],
     queryFn: () =>
       getTodosPage({
@@ -76,8 +77,8 @@ export function useTodosPage(params: {
         page_size: params.pageSize,
         search: params.search,
       }),
-    keepPreviousData: true,
-  } as any);
+    keepPreviousData: true, // これでリストが入れ替わらずフォーカス維持
+  } as UseQueryOptions<Paginated<Todo>, Error, Paginated<Todo>, [string, { page: number; pageSize: number; search?: string }]>);
 }
 
 // 無限スクロール
