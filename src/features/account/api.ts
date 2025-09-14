@@ -13,11 +13,39 @@ async function authFetch(url: string, init?: RequestInit) {
       ...(init?.headers || {}),
     },
   });
-  if (!res.ok) throw new Error("ユーザー情報の取得に失敗しました。");
+  if (!res.ok) {
+    let msg = "リクエストに失敗しました。";
+    try {
+      const data = await res.json();
+      if (typeof data === "object" && data) {
+        msg =
+          // {"field":["msg"]...} を結合
+          (data as any).message ||
+          (data as any).detail ||
+          Object.values(data).flat().map(String).join(" ") ||
+          msg;
+      }
+    } catch {
+      /* ignore */
+    }
+    throw new Error(msg);
+  }
   return res;
 }
 
+// 追加: ユーザー情報取得
 export async function fetchMe(): Promise<Me> {
-  const res = await authFetch(`${API_BASE_URL}/auth/me/`);
+  const res = await authFetch(`${API_BASE_URL}/auth/me/`, { method: "GET" });
   return res.json();
+}
+
+export async function changePassword(params: {
+  old_password: string;
+  new_password: string;
+}) {
+  await authFetch(`${API_BASE_URL}/users/me/password/`, {
+    method: "POST",
+    body: JSON.stringify(params),
+  });
+  return true;
 }

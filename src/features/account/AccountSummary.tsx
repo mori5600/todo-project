@@ -17,7 +17,9 @@ function AccountSummary() {
     return (
       <Card>
         <Card.Body>
-          <Alert variant="danger">取得に失敗: {error.message}</Alert>
+          <Alert variant="danger" className="mb-0">
+            取得に失敗: {error.message}
+          </Alert>
         </Card.Body>
       </Card>
     );
@@ -26,12 +28,11 @@ function AccountSummary() {
 
   return (
     <Card>
-      <Card.Header>アカウント</Card.Header>
+      <Card.Header>アカウント情報</Card.Header>
       <Card.Body>
         <div className="mb-2">
           ユーザー名: <strong>{data.username}</strong>
         </div>
-        {/* 追加フィールドはここに */}
       </Card.Body>
     </Card>
   );
