@@ -5,6 +5,7 @@ import { AppURL } from "./constants";
 import TodoList from "./pages/todo/TodoListPage";
 import AuthLayout from "./features/auth/AuthLayout";
 import Header from "./common/components/Header";
+import AccountPage from "./pages/account/AccountPage";
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
           <Route path={AppURL.SIGNUP} element={<SignupPage />} />
           <Route element={<AuthLayout />}>
             <Route path={AppURL.TODOLIST} element={<TodoList />} />
+            <Route path={AppURL.ACCOUNT} element={<AccountPage />} />
           </Route>
         </Routes>
       </main>

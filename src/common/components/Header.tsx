@@ -36,8 +36,8 @@ function Header() {
         <Navbar.Collapse id="responsive-navbar-nav">
           {isLoggedIn ? (
             <Nav className="ms-auto">
-              <Nav.Link as={Link} to={AppURL.TODOLIST}>
-                マイページ
+              <Nav.Link as={Link} to={AppURL.ACCOUNT}>
+                アカウント
               </Nav.Link>
               <Nav.Link
                 onClick={() => {
