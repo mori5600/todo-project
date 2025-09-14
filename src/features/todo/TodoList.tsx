@@ -1,5 +1,5 @@
 import { ListGroup, Button } from "react-bootstrap";
-import type { Todo } from "../../features/todo/types";
+import type { Todo } from "./types";
 
 type Props = {
   todos: Todo[];

@@ -6,10 +6,10 @@ import {
   useUpdateTodo,
   useDeleteTodo,
 } from "../../features/todo/hooks";
-import TodoAddModal from "./TodoAddModal";
-import TodoDetail from "./TodoDetail";
-import TodoEditModal from "./TodoEditModal";
-import TodoList from "./TodoList";
+import TodoAddModal from "../../features/todo/TodoAddModal";
+import TodoDetail from "../../features/todo/TodoDetail";
+import TodoEditModal from "../../features/todo/TodoEditModal";
+import TodoList from "../../features/todo/TodoList";
 
 function TodoListPage() {
   const { data: todos = [], isLoading, error } = useTodosQuery();

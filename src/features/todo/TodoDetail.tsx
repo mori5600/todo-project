@@ -1,5 +1,5 @@
 import { Card, Button, ButtonGroup } from "react-bootstrap";
-import type { Todo } from "../../features/todo/types";
+import type { Todo } from "./types";
 
 type Props = {
   todo: Todo | null;

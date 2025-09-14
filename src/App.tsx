@@ -1,10 +1,10 @@
-import Header from "./components/Header";
 import LoginPage from "./pages/auth/LoginPage";
 import { Routes, Route } from "react-router-dom";
 import SignupPage from "./pages/auth/SignupPage";
 import { AppURL } from "./constants";
 import TodoList from "./pages/todo/TodoListPage";
 import AuthLayout from "./features/auth/AuthLayout";
+import Header from "./common/components/Header";
 
 function App() {
   return (

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
-import type { Todo, Status } from "../../features/todo/types";
-import { TodoStatusLabels } from "../../features/todo/types";
+import type { Todo, Status } from "./types";
+import { TodoStatusLabels } from "./types";
 
 type Props = {
   show: boolean;
