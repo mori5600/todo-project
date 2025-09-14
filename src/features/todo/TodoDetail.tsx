@@ -1,4 +1,5 @@
-import { Card, Button, ButtonGroup } from "react-bootstrap";
+import { Card, Button, ButtonGroup, Badge } from "react-bootstrap";
+import { TodoStatusLabels } from "./types";
 import type { Todo } from "./types";
 
 type Props = {
@@ -22,7 +23,20 @@ function TodoDetail({ todo, onEdit, onDelete, disabled }: Props) {
   return (
     <Card className="h-100" style={{ minHeight: "60vh" }}>
       <Card.Header className="d-flex justify-content-between align-items-center">
-        <span className="fw-semibold">{todo.title}</span>
+        <span className="fw-semibold d-flex align-items-center gap-2">
+          {todo.title}
+          <Badge
+            bg={
+              todo.status === "done"
+                ? "success"
+                : todo.status === "in_progress"
+                ? "warning"
+                : "secondary"
+            }
+          >
+            {TodoStatusLabels[todo.status]}
+          </Badge>
+        </span>
         <ButtonGroup size="sm">
           <Button
             variant="outline-primary"

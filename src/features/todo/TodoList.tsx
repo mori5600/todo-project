@@ -1,11 +1,18 @@
-import { ListGroup, Button } from "react-bootstrap";
-import type { Todo } from "./types";
+import { ListGroup, Button, Badge } from "react-bootstrap";
+import { TodoStatusLabels } from "./types";
+import type { Status, Todo } from "./types";
 
 type Props = {
   todos: Todo[];
   selectedId: number | null;
   onSelect: (id: number) => void;
   onAddClick: () => void;
+};
+
+const statusVariant: Record<Status, string> = {
+  todo: "secondary",
+  in_progress: "warning",
+  done: "success",
 };
 
 function TodoList({ todos, selectedId, onSelect, onAddClick }: Props) {
@@ -27,7 +34,12 @@ function TodoList({ todos, selectedId, onSelect, onAddClick }: Props) {
             className="text-truncate"
             title={t.title}
           >
-            {t.title}
+            <div className="d-flex justify-content-between align-items-center">
+              <span className="me-2 text-truncate">{t.title}</span>
+              <Badge bg={statusVariant[t.status]}>
+                {TodoStatusLabels[t.status]}
+              </Badge>
+            </div>
           </ListGroup.Item>
         ))}
       </ListGroup>
