@@ -1,21 +1,29 @@
-import { useMemo, useState, useEffect } from "react";
-import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
+import { useState, useEffect, useMemo } from "react";
 import {
-  useTodosQuery,
-  useCreateTodo,
-  useUpdateTodo,
-  useDeleteTodo,
-} from "../../features/todo/hooks";
-import TodoAddModal from "../../features/todo/TodoAddModal";
-import TodoDetail from "../../features/todo/TodoDetail";
-import TodoEditModal from "../../features/todo/TodoEditModal";
+  Container,
+  Row,
+  Col,
+  Spinner,
+  Alert,
+  Pagination,
+  Form,
+} from "react-bootstrap";
+import { useTodosPage, useCreateTodo } from "../../features/todo/hooks";
 import TodoList from "../../features/todo/TodoList";
+import TodoDetail from "../../features/todo/TodoDetail";
+import TodoAddModal from "../../features/todo/TodoAddModal";
+import TodoEditModal from "../../features/todo/TodoEditModal";
 
 function TodoListPage() {
-  const { data: todos = [], isLoading, error } = useTodosQuery();
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(10);
+  const [search, setSearch] = useState("");
+  const { data, isLoading, error } = useTodosPage({ page, pageSize, search });
   const createMut = useCreateTodo();
-  const updateMut = useUpdateTodo();
-  const deleteMut = useDeleteTodo();
+
+  const todos = data?.results ?? [];
+  const total = data?.count ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -27,66 +35,50 @@ function TodoListPage() {
     }
   }, [todos, selectedId]);
 
+  useEffect(() => {
+    setSelectedId(null);
+  }, [page, search]);
+
   const selectedTodo = useMemo(
     () => todos.find((t) => t.id === selectedId) ?? null,
     [todos, selectedId]
   );
 
-  const handleAdd = (title: string, description: string, status: any) => {
-    createMut.mutate({ title, description, status });
-  };
-
-  const handleSave = (values: {
-    title: string;
-    description: string;
-    status: any;
-  }) => {
-    if (!selectedTodo) return;
-    updateMut.mutate({
-      id: selectedTodo.id,
-      input: {
-        title: values.title,
-        description: values.description,
-        status: values.status,
-      },
-    });
-  };
-
-  const handleDelete = () => {
-    if (!selectedTodo) return;
-    if (!confirm("この項目を削除します。よろしいですか？")) return;
-    deleteMut.mutate(selectedTodo.id, {
-      onSuccess: () => {
-        // 削除対象を選択中なら選択解除
-        if (selectedId === selectedTodo.id) {
-          setSelectedId(null);
-        }
-      },
-    });
-  };
-
   if (isLoading) {
     return (
       <Container className="mt-4 text-center">
-        <Spinner animation="border" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </Spinner>
+        <Spinner animation="border" />
       </Container>
     );
   }
-
   if (error) {
     return (
       <Container className="mt-4">
-        <Alert variant="danger">
-          エラー: {error.message || "データの取得に失敗しました。"}
-        </Alert>
+        <Alert variant="danger">{error.message}</Alert>
       </Container>
     );
   }
 
   return (
     <Container className="mt-4">
+      <Row className="mb-3">
+        <Col sm={6} className="mb-2">
+          <Form.Control
+            placeholder="検索..."
+            value={search}
+            onChange={(e) => {
+              setPage(1);
+              setSearch(e.target.value);
+            }}
+          />
+        </Col>
+        <Col
+          sm={6}
+          className="d-flex align-items-center justify-content-sm-end small text-muted"
+        >
+          {total} 件 / {totalPages} ページ
+        </Col>
+      </Row>
       <Row style={{ minHeight: "60vh" }}>
         <Col xs={12} sm={5} md={4} className="mb-3 mb-sm-0">
           <TodoList
@@ -95,41 +87,68 @@ function TodoListPage() {
             onSelect={setSelectedId}
             onAddClick={() => setShowAddModal(true)}
           />
+          <div className="d-flex justify-content-center mt-3">
+            <Pagination size="sm" className="mb-0">
+              <Pagination.First
+                disabled={page === 1}
+                onClick={() => setPage(1)}
+              />
+              <Pagination.Prev
+                disabled={page === 1}
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+              />
+              <Pagination.Item active>{page}</Pagination.Item>
+              <Pagination.Next
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              />
+              <Pagination.Last
+                disabled={page === totalPages}
+                onClick={() => setPage(totalPages)}
+              />
+            </Pagination>
+          </div>
         </Col>
-
         <Col xs={12} sm={7} md={8}>
           <TodoDetail
             todo={selectedTodo}
             onEdit={() => setShowEditModal(true)}
-            onDelete={handleDelete}
+            onDelete={() => {
+              // ページング対応の削除ロジックは後で (例: 削除後に再フェッチ)
+              alert("削除は未実装（ページング対応版）");
+            }}
           />
         </Col>
       </Row>
-
       <TodoAddModal
         show={showAddModal}
         onHide={() => setShowAddModal(false)}
-        onAdd={handleAdd}
+        onAdd={(title, description, status) => {
+          createMut.mutate(
+            { title, description, status },
+            {
+              onSuccess: () => {
+                setShowAddModal(false);
+                setPage(1); // 先頭ページに戻す
+              },
+            }
+          );
+        }}
       />
-
+      {/* エラー / 進行表示（任意） */}
+      {createMut.error && (
+        <div className="text-danger small mt-2">
+          追加エラー: {createMut.error.message}
+        </div>
+      )}
       <TodoEditModal
         show={showEditModal}
         onHide={() => setShowEditModal(false)}
         todo={selectedTodo}
-        onSave={handleSave}
+        onSave={(values) => {
+          console.log("edit", values);
+        }}
       />
-      {(createMut.isPending || updateMut.isPending || deleteMut.isPending) && (
-        <div className="position-fixed bottom-0 end-0 m-3 small text-muted">
-          処理中...
-        </div>
-      )}
-      {(createMut.error || updateMut.error || deleteMut.error) && (
-        <div className="position-fixed bottom-0 start-0 m-3 text-danger small">
-          {createMut.error?.message ||
-            updateMut.error?.message ||
-            deleteMut.error?.message}
-        </div>
-      )}
     </Container>
   );
 }

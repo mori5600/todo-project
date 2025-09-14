@@ -1,6 +1,21 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getTodos, createTodo, updateTodo, deleteTodo } from "./api";
-import type { Todo, CreateTodoInput, UpdateTodoInput } from "./types";
+import {
+  useQuery,
+  useMutation,
+  useQueryClient,
+  useInfiniteQuery,
+} from "@tanstack/react-query";
+import {
+  getTodos,
+  createTodo,
+  updateTodo,
+  deleteTodo,
+  getTodosPage,
+} from "./api";
+import type {
+  Todo,
+  UpdateTodoInput,
+  Paginated,
+} from "./types";
 
 const KEY = ["todos"];
 
@@ -14,11 +29,10 @@ export function useTodosQuery() {
 export function useCreateTodo() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (input: CreateTodoInput) => createTodo(input),
-    onSuccess: (newTodo) => {
-      qc.setQueryData<Todo[]>(KEY, (prev) =>
-        prev ? [newTodo, ...prev] : [newTodo]
-      );
+    mutationFn: createTodo,
+    onSuccess: () => {
+      // すべてのページキャッシュを無効化（queryKey 先頭 'todos' を対象）
+      qc.invalidateQueries({ queryKey: ["todos"] });
     },
   });
 }
@@ -45,5 +59,46 @@ export function useDeleteTodo() {
         prev ? prev.filter((t) => t.id !== id) : []
       );
     },
+  });
+}
+
+// 通常ページネーション
+export function useTodosPage(params: {
+  page: number;
+  pageSize: number;
+  search?: string;
+}) {
+  return useQuery<Paginated<Todo>, Error>({
+    queryKey: ["todos", params],
+    queryFn: () =>
+      getTodosPage({
+        page: params.page,
+        page_size: params.pageSize,
+        search: params.search,
+      }),
+    keepPreviousData: true,
+  } as any);
+}
+
+// 無限スクロール
+export function useInfiniteTodos(params: {
+  pageSize: number;
+  search?: string;
+}) {
+  return useInfiniteQuery<Paginated<Todo>, Error>({
+    queryKey: ["todos", "infinite", params],
+    queryFn: (context) => {
+      const pageParam = (context?.pageParam as number) ?? 1;
+      return getTodosPage({
+        page: pageParam,
+        page_size: params.pageSize,
+        search: params.search,
+      });
+    },
+    getNextPageParam: (lastPage, allPages) => {
+      if (!lastPage.next) return undefined;
+      return allPages.length + 1;
+    },
+    initialPageParam: 1,
   });
 }

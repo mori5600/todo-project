@@ -1,11 +1,16 @@
 import { API_BASE_URL, HttpMethod } from "../../constants";
 import { tokenStore } from "../auth/tokenStore";
-import type {
-  Todo,
-  Paginated,
-  CreateTodoInput,
-  UpdateTodoInput,
-} from "./types";
+import type { CreateTodoInput, Todo, Paginated, UpdateTodoInput } from "./types";
+
+function buildQuery(params: Record<string, any>) {
+  const q = new URLSearchParams();
+  Object.entries(params).forEach(([k, v]) => {
+    if (v === undefined || v === null || v === "") return;
+    q.set(k, String(v));
+  });
+  const s = q.toString();
+  return s ? `?${s}` : "";
+}
 
 async function parseError(res: Response) {
   try {
@@ -79,10 +84,29 @@ export async function getTodo(id: number): Promise<Todo> {
 
 // 追加
 export async function createTodo(input: CreateTodoInput): Promise<Todo> {
-  const res = await authFetch(`${API_BASE_URL}/todos/`, {
+  const tokens = tokenStore.load();
+  if (!tokens?.access) throw new Error("認証が必要です。");
+  const res = await fetch(`${API_BASE_URL}/todos/`, {
     method: HttpMethod.POST,
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${tokens.access}`,
+    },
     body: JSON.stringify(input),
   });
+  if (!res.ok) {
+    let msg = "追加に失敗しました。";
+    try {
+      const data = await res.json();
+      msg =
+        data?.message ||
+        data?.detail ||
+        (typeof data === "object"
+          ? Object.values(data).flat().map(String).join(" ")
+          : msg);
+    } catch {}
+    throw new Error(msg);
+  }
   return res.json();
 }
 
@@ -103,4 +127,17 @@ export async function deleteTodo(id: number): Promise<void> {
   await authFetch(`${API_BASE_URL}/todos/${id}/`, {
     method: HttpMethod.DELETE,
   });
+}
+
+// 1ページ取得
+export async function getTodosPage(params: {
+  page?: number;
+  page_size?: number;
+  search?: string;
+}): Promise<Paginated<Todo>> {
+  const query = buildQuery(params);
+  const res = await authFetch(`${API_BASE_URL}/todos/${query}`, {
+    method: HttpMethod.GET,
+  });
+  return res.json();
 }
