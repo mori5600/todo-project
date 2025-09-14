@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   Container,
   Row,
@@ -9,25 +9,32 @@ import {
   ButtonGroup,
   Modal,
   Form,
+  Spinner,
+  Alert,
 } from "react-bootstrap";
-
-type Todo = {
-  id: string;
-  title: string;
-  detail: string;
-};
-
-const INITIAL: Todo[] = [
-  { id: "1", title: "買い物", detail: "牛乳・卵・パンを購入" },
-  { id: "2", title: "資料作成", detail: "来週分の議事メモ" },
-  { id: "3", title: "掃除", detail: "リビング周り" },
-];
+import { useQuery } from "@tanstack/react-query";
+import { getTodos } from "../../features/todo/api";
+import type { Todo } from "../../features/todo/types";
 
 function TodoListPage() {
-  const [todos, setTodos] = useState<Todo[]>(INITIAL);
-  const [selectedId, setSelectedId] = useState<string | null>(
-    INITIAL[0]?.id ?? null
-  );
+  // react-queryでTodoデータを取得
+  const {
+    data: todos = [],
+    isLoading,
+    error,
+  } = useQuery<Todo[], Error>({
+    queryKey: ["todos"],
+    queryFn: getTodos,
+  });
+
+  const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  // todosが読み込まれたら、最初の項目を選択状態にする
+  useEffect(() => {
+    if (!selectedId && todos.length > 0) {
+      setSelectedId(todos[0].id);
+    }
+  }, [todos, selectedId]);
 
   const selected = useMemo(
     () => todos.find((t) => t.id === selectedId) ?? null,
@@ -47,41 +54,51 @@ function TodoListPage() {
   const openEdit = () => {
     if (!selected) return;
     setEditTitle(selected.title);
-    setEditDetail(selected.detail);
+    setEditDetail(selected.description); // `detail` -> `description`
     setShowEdit(true);
   };
 
   const applyEdit = () => {
     if (!selected) return;
-    setTodos((prev) =>
-      prev.map((t) =>
-        t.id === selected.id
-          ? { ...t, title: editTitle, detail: editDetail }
-          : t
-      )
-    );
+    // TODO: APIで更新処理を実装
+    console.log("applyEdit", { id: selected.id, editTitle, editDetail });
     setShowEdit(false);
   };
 
   const handleDelete = () => {
     if (!selected) return;
     if (!confirm("この項目を削除します。よろしいですか？")) return;
-    setTodos((prev) => prev.filter((t) => t.id !== selected.id));
-    setSelectedId((prevId) => {
-      const remain = todos.filter((t) => t.id !== prevId);
-      return remain[0]?.id ?? null;
-    });
+    // TODO: APIで削除処理を実装
+    console.log("handleDelete", selected.id);
   };
 
   const handleAdd = () => {
-    const id = Date.now().toString(); // 簡易ID
-    const newTodo: Todo = { id, title: newTitle, detail: newDetail };
-    setTodos((prev) => [...prev, newTodo]);
-    setSelectedId(id);
+    // TODO: APIで追加処理を実装
+    console.log("handleAdd", { newTitle, newDetail });
     setShowAdd(false);
     setNewTitle("");
     setNewDetail("");
   };
+
+  if (isLoading) {
+    return (
+      <Container className="mt-4 text-center">
+        <Spinner animation="border" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </Spinner>
+      </Container>
+    );
+  }
+
+  if (error) {
+    return (
+      <Container className="mt-4">
+        <Alert variant="danger">
+          エラー: {error.message || "データの取得に失敗しました。"}
+        </Alert>
+      </Container>
+    );
+  }
 
   return (
     <Container className="mt-4">
@@ -128,13 +145,15 @@ function TodoListPage() {
                 </Card.Header>
                 <Card.Body>
                   <Card.Text style={{ whiteSpace: "pre-wrap" }}>
-                    {selected.detail}
+                    {selected.description}
                   </Card.Text>
                 </Card.Body>
               </>
             ) : (
               <Card.Body className="d-flex align-items-center justify-content-center text-muted">
-                左の一覧から項目を選択してください。
+                {todos.length > 0
+                  ? "左の一覧から項目を選択してください。"
+                  : "Todo項目がありません。追加してください。"}
               </Card.Body>
             )}
           </Card>
