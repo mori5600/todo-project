@@ -3,7 +3,6 @@ import {
   useMutation,
   useQueryClient,
   useInfiniteQuery,
-  type UseQueryOptions,
 } from "@tanstack/react-query";
 import {
   getTodos,
