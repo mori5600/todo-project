@@ -14,11 +14,9 @@ function Header() {
 
   useEffect(() => {
     const sync = () => setIsLoggedIn(tokenStore.isLoggedIn());
-
     window.addEventListener(tokenStore.eventName, sync);
     window.addEventListener("storage", sync);
     window.addEventListener("visibilitychange", sync);
-
     return () => {
       window.removeEventListener(tokenStore.eventName, sync);
       window.removeEventListener("storage", sync);
@@ -26,10 +24,21 @@ function Header() {
     };
   }, []);
 
+  const brandTo = isLoggedIn ? AppURL.TODOLIST : AppURL.LOGIN;
+
   return (
     <Navbar collapseOnSelect expand="lg" className="bg-body-tertiary">
       <Container>
-        <Navbar.Brand className="fw-bold" as={Link} to="/">
+        <Navbar.Brand
+          className="fw-bold"
+          as={Link}
+          to={brandTo}
+          onClick={(e) => {
+            // 既にそのページでも明示遷移させたい場合 navigate を強制
+            e.preventDefault();
+            navigate(brandTo);
+          }}
+        >
           TODO-PROJECT
         </Navbar.Brand>
         <Navbar.Toggle aria-controls="responsive-navbar-nav" />
