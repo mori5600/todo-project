@@ -1,28 +1,35 @@
 import { useState, useEffect } from "react";
 import { Modal, Form, Button } from "react-bootstrap";
-import type { Todo } from "../../features/todo/types";
+import type { Todo, Status } from "../../features/todo/types";
+import { TodoStatusLabels } from "../../features/todo/types";
 
 type Props = {
   show: boolean;
   onHide: () => void;
   todo: Todo | null;
-  onSave: (title: string, description: string) => void;
+  onSave: (values: {
+    title: string;
+    description: string;
+    status: Status;
+  }) => void;
 };
 
 function TodoEditModal({ show, onHide, todo, onSave }: Props) {
   const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  const [desc, setDesc] = useState("");
+  const [status, setStatus] = useState<Status>("todo");
 
   useEffect(() => {
     if (todo) {
       setTitle(todo.title);
-      setDescription(todo.description);
+      setDesc(todo.description || "");
+      setStatus(todo.status);
     }
   }, [todo, show]);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSave(title, description);
+    onSave({ title, description: desc, status });
     onHide();
   };
 
@@ -39,16 +46,30 @@ function TodoEditModal({ show, onHide, todo, onSave }: Props) {
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
+              maxLength={100}
             />
           </Form.Group>
-          <Form.Group className="mb-3" controlId="editDetail">
+          <Form.Group className="mb-3" controlId="editDesc">
             <Form.Label>詳細</Form.Label>
             <Form.Control
               as="textarea"
-              rows={5}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              rows={4}
+              value={desc}
+              onChange={(e) => setDesc(e.target.value)}
             />
+          </Form.Group>
+          <Form.Group className="mb-3" controlId="editStatus">
+            <Form.Label>ステータス</Form.Label>
+            <Form.Select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as Status)}
+            >
+              {Object.entries(TodoStatusLabels).map(([v, label]) => (
+                <option key={v} value={v}>
+                  {label}
+                </option>
+              ))}
+            </Form.Select>
           </Form.Group>
           <div className="d-flex justify-content-end gap-2">
             <Button variant="secondary" onClick={onHide}>

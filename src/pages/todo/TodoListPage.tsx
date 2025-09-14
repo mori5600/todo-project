@@ -1,22 +1,21 @@
 import { useMemo, useState, useEffect } from "react";
 import { Container, Row, Col, Spinner, Alert } from "react-bootstrap";
-import { useQuery } from "@tanstack/react-query";
-import { getTodos } from "../../features/todo/api";
-import type { Todo } from "../../features/todo/types";
+import {
+  useTodosQuery,
+  useCreateTodo,
+  useUpdateTodo,
+  useDeleteTodo,
+} from "../../features/todo/hooks";
 import TodoAddModal from "./TodoAddModal";
 import TodoDetail from "./TodoDetail";
 import TodoEditModal from "./TodoEditModal";
 import TodoList from "./TodoList";
 
 function TodoListPage() {
-  const {
-    data: todos = [],
-    isLoading,
-    error,
-  } = useQuery<Todo[], Error>({
-    queryKey: ["todos"],
-    queryFn: getTodos,
-  });
+  const { data: todos = [], isLoading, error } = useTodosQuery();
+  const createMut = useCreateTodo();
+  const updateMut = useUpdateTodo();
+  const deleteMut = useDeleteTodo();
 
   const [selectedId, setSelectedId] = useState<number | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -33,22 +32,37 @@ function TodoListPage() {
     [todos, selectedId]
   );
 
-  const handleAdd = (title: string, description: string) => {
-    // TODO: APIで追加処理を実装 (useMutation)
-    console.log("handleAdd", { title, description });
+  const handleAdd = (title: string, description: string, status: any) => {
+    createMut.mutate({ title, description, status });
   };
 
-  const handleSave = (title: string, description: string) => {
+  const handleSave = (values: {
+    title: string;
+    description: string;
+    status: any;
+  }) => {
     if (!selectedTodo) return;
-    // TODO: APIで更新処理を実装 (useMutation)
-    console.log("handleSave", { id: selectedTodo.id, title, description });
+    updateMut.mutate({
+      id: selectedTodo.id,
+      input: {
+        title: values.title,
+        description: values.description,
+        status: values.status,
+      },
+    });
   };
 
   const handleDelete = () => {
     if (!selectedTodo) return;
     if (!confirm("この項目を削除します。よろしいですか？")) return;
-    // TODO: APIで削除処理を実装 (useMutation)
-    console.log("handleDelete", selectedTodo.id);
+    deleteMut.mutate(selectedTodo.id, {
+      onSuccess: () => {
+        // 削除対象を選択中なら選択解除
+        if (selectedId === selectedTodo.id) {
+          setSelectedId(null);
+        }
+      },
+    });
   };
 
   if (isLoading) {
@@ -104,6 +118,18 @@ function TodoListPage() {
         todo={selectedTodo}
         onSave={handleSave}
       />
+      {(createMut.isPending || updateMut.isPending || deleteMut.isPending) && (
+        <div className="position-fixed bottom-0 end-0 m-3 small text-muted">
+          処理中...
+        </div>
+      )}
+      {(createMut.error || updateMut.error || deleteMut.error) && (
+        <div className="position-fixed bottom-0 start-0 m-3 text-danger small">
+          {createMut.error?.message ||
+            updateMut.error?.message ||
+            deleteMut.error?.message}
+        </div>
+      )}
     </Container>
   );
 }
